@@ -1,0 +1,194 @@
+#referensi https://prasetyadi.name/2021/manipulasi-gambar-dengan-python-pillow/
+
+#Persiapan Environment
+pip install Pillow
+
+#Untuk mengimpor Pillow:
+from PIL import Image
+
+#Mengubah Dimensi Gambar (Resize)
+resized_img = image_object.resize(tuple, resample=Image.BICUBIC)
+resized_img.save('newfile.gif')
+
+penjelasan :
+image_object: instansi Image
+tuple adalah tuple dimensi gambar lebar x tinggi, misal (300, 150) (perhatikan tanda kurung ya...)
+resample: opsional, pilihannya:
+Image.NEAREST
+Image.BOX
+Image.BILINEAR
+Image.HAMMING
+Image.BICUBIC
+Image.LANCZOS
+
+Membuat Thumbnail
+
+image_object.thumbnail((lebar, tinggi))
+image_object.save('thumb.gif')
+
+Memotong (Cropping) Gambar
+Seperti bisa dilihat di bawah, metodenya adalah crop().
+
+crop_img = image_object.crop((340, 20, 560, 230))
+crop_img.save('cropped.jpg')
+Perhatikan, pada sistem koordinat kartesian untuk Pillow, titik x, y = 0, 0 berada di kiri atas gambar. Sintaksnya adalah
+
+cropped = Image.crop( ( x, y, x + lebar , y + tinggi ) )
+
+# atau
+
+cropped = Image.crop( ( kiri, atas, kanan, bawah ) )
+
+
+Menambahkan Border pada Gambar
+Border bisa ditambahkan dengan cara membuat gambar baru. Pada contoh ini, kita akan membuat border dengan tebal 10 pixel, maka gambar yang akan kita buat (dengan latar belakang red) harus 20 pixel lebih besar.
+
+border_im = image_object.new('RGB', (img.width+20, img.height+20), 'red')
+border_im.paste(img, (10, 10))
+border_im.save('lena-border.jpg')
+Memutar (Rotate) Gambar
+Kita bisa menggunakan metode transpose() dengan satu parameter:
+
+from PIL import Image
+
+
+img = Image.open('lena.png')
+
+rotated = img.transpose(Image.ROTATE_90)
+rotated.show()
+
+rotated.save('rotate90.jpg')
+Beberapa parameter rotasi gambar:
+
+PIL.Image.ROTATE_90
+PIL.Image.ROTATE_180
+PIL.Image.ROTATE_270
+Rotasi berlawanan jalan jarum jam. Kalau mau lebih bebas lagi, kita bisa menggunakan Image.rotate():
+
+Image.rotate(angle, resample=0, expand=0, center=None)
+dimana
+
+angle: sudut (berlawanan jalan jarum jam)
+expand: jika True, dimensi gambar akan disesuaikan untuk memuat hasil rotasi seutuhnya
+center: pusat rotasi dalam tuple (x, y). Default adalah titik tengah gambar
+resample: lihat penjelasan di bagian Resize
+Flip
+Masih menggunakan metode transpose():
+
+from PIL import Image
+
+
+img = Image.open('lena.png')
+
+# Flip kiri-kanan (axis vertikal)
+flipped = img.transpose(Image.FLIP_LEFT_RIGHT)
+
+flipped.show()
+
+flipped.save('flipped.jpg')
+Dan tentu saja masih ada flip atas-bawah (axis horizontal): PIL.Image.FLIP_TOP_BOTTOM.
+
+
+
+Brightness, Contrast, dan Sharpness
+Untuk ketiga tipe manipulasi ini, ada yang disebut faktor 1 (factor of one). Nilai 1 ini adalah gambar asli sebelum manipulasi. Kelas di library Pillow yang akan kita gunakan adalah ImageEnhance.
+
+from PIL import Image, ImageEnhance
+Brightness
+Untuk faktor: brighter > 1 > darker
+
+from PIL import Image, ImageEnhance
+
+
+img = Image.open("lena.png")
+
+# buat instansi enhancer untuk brightness
+enhancer = ImageEnhance.Brightness(img)
+
+factor = 1
+# panggil metode enhance untuk memanipulasi
+im_output = enhancer.enhance(factor)
+#im_output.save('original-image.png')
+
+factor = 0.5 # darkens
+im_output = enhancer.enhance(factor)
+im_output.save('darkened.png')
+
+factor = 1.5 # brightens
+im_output = enhancer.enhance(factor)
+im_output.save('brightened.png')
+Contrast
+Untuk faktor: kontras > 1 > kelabu
+
+from PIL import Image, ImageEnhance
+
+
+img = Image.open("lena.png")
+
+enhancer = ImageEnhance.Contrast(img)
+
+factor = 1
+im_output = enhancer.enhance(factor)
+#im_output.save('original-image.png')
+
+factor = 0.5 # kurangi kontras
+im_output = enhancer.enhance(factor)
+im_output.save('less-contrast.png')
+
+factor = 1.5 # tambah kontras
+im_output = enhancer.enhance(factor)
+im_output.save('more-contrast.png')
+Sharpness
+Untuk faktor: tajam > 1 > buram
+
+from PIL import Image, ImageEnhance
+
+
+img = Image.open('lena.png')
+
+enhancer = ImageEnhance.Sharpness(img)
+
+factor = 1
+im_s_1 = enhancer.enhance(factor)
+#im_s_1.save('original-image.png')
+
+factor = 0.05
+im_s_1 = enhancer.enhance(factor)
+im_s_1.save('blurred.png')
+
+factor = 2
+im_s_1 = enhancer.enhance(factor)
+im_s_1.save('sharpened.png')
+Watermark
+Kode di bawah adalah untuk menambahkan watermark berupa teks. Untuk latihan, gunakan nomor pokok mahasiswa (NPM) sebagai teks watermark. Pada contoh ini, lokasi watermark adalah di kanan bawah gambar dengan margin 15 pixel agar tulisan tidak terlalu ke tepi.
+
+Penting: font Arial bisa diunduh disini. Taruh file ttf di direktori yang sama dengan kode program.
+
+# Sesuaikan kelas-kelas yang diimpor dari Pillow
+from PIL import Image, ImageDraw, ImageFont
+
+# Buka gambar sumber
+img = Image.open('lena.png')
+width, height = img.size  # lebar dan tinggi untuk kalkulasi koordinat teks
+
+# menambahkan elemen 2d ke gambar yang sudah ada
+draw = ImageDraw.Draw(img)
+
+text = '13113770' # ganti dengan npm mu...
+
+# mendefinisikan font baru, lengkap dengan ukurannya
+font = ImageFont.truetype('arial.ttf', 18)
+# hitung lebar dan tinggi font relatif terhadap gambar utama
+textwidth, textheight = draw.textsize(text, font)
+
+# hitung koordinat x, y teks
+margin = 15
+x = width - textwidth - margin
+y = height - textheight - margin
+
+# terapkan watermark
+draw.text((x, y), text, font=font)
+img.show()
+
+# Simpan gambar
+img.save('watermark.jpg')
